@@ -10,6 +10,9 @@ dependencies = [
     "tqdm",
 ]
 
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
 [tool.mypy]
 exclude = ["^\\.venv/", "^data/"]
 
