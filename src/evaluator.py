@@ -73,7 +73,8 @@ def evaluate_recall(
             ]
 
             found = sum(
-                any(_overlaps(candidate, expected) for candidate in retrieved_sources)
+                any(_overlaps(candidate, expected)
+                    for candidate in retrieved_sources)
                 for expected in expected_sources
             )
             question_recalls.append(found / len(expected_sources))
