@@ -8,6 +8,8 @@ dependencies = [
     "fire",
     "numpy>=2.2.6",
     "pydantic",
+    "transformers",
+    "torch",
     "tqdm",
 ]
 
