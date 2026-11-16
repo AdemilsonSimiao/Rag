@@ -8,11 +8,11 @@ from src.models import (
     StudentSearchResults,
     StudentSearchResultsAndAnswer,
 )
-from error import fail
+from src.error import fail
 from src.generator import answer_question, load_generator
-from question import search_question
+from src.question import search_question
 from typing import List
-from passages import read_passages
+from src.passages import read_passages
 
 
 class Cli:

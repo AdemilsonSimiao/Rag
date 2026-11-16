@@ -6,7 +6,7 @@ from typing import Dict, List
 
 import pytest
 
-from src.__main__ import Cli
+from src.cli import Cli
 
 
 @pytest.fixture
@@ -20,7 +20,7 @@ def calls(monkeypatch: pytest.MonkeyPatch) -> List[str]:
             return "fake answer"
         return generate
 
-    monkeypatch.setattr("src.__main__.load_model", fake_load)
+    monkeypatch.setattr("src.generator.load_model", fake_load)
     return prompts
 
 
@@ -107,7 +107,7 @@ def test_model_that_cannot_load_exits_cleanly(
     def broken(model_name: str) -> object:
         raise ImportError("No module named 'torch'")
 
-    monkeypatch.setattr("src.__main__.load_model", broken)
+    monkeypatch.setattr("src.generator.load_model", broken)
     results = project / "results.json"
     write_results(results, [])
     with pytest.raises(SystemExit) as error:

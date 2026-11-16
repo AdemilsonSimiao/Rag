@@ -2,6 +2,7 @@ from src.retriever import Bm25Index
 from src.models import MinimalSearchResults, MinimalSource
 from typing import List
 
+
 def search_question(
     index: Bm25Index, question_id: str, question: str, k: int
 ) -> MinimalSearchResults:

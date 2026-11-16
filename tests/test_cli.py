@@ -1,11 +1,11 @@
-"""Tests for the command-line interface in src/__main__.py."""
+"""Tests for the command-line interface in src/cli.py."""
 
 import json
 from pathlib import Path
 
 import pytest
 
-from src.__main__ import Cli
+from src.cli import Cli
 
 
 @pytest.fixture

@@ -1,6 +1,7 @@
 import re
-from typing import Dict, List, Protocol, Tuple
-from error import fail
+from typing import Any, Dict, List, Protocol, Tuple
+
+from src.error import fail
 from src.models import MinimalSource
 
 
@@ -83,16 +84,18 @@ def load_model(
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForCausalLM.from_pretrained(model_name)
+    model: Any = AutoModelForCausalLM.from_pretrained(model_name)
     model.eval()
 
     def generate(messages: List[Dict[str, str]]) -> str:
         """Run the model on the chat messages and return only the reply."""
-        prompt: str = tokenizer.apply_chat_template(
-            messages,
-            tokenize=False,
-            add_generation_prompt=True,
-            enable_thinking=False,
+        prompt = str(
+            tokenizer.apply_chat_template(
+                messages,
+                tokenize=False,
+                add_generation_prompt=True,
+                enable_thinking=False,
+            )
         )
         inputs = tokenizer(prompt, return_tensors="pt")
         with torch.no_grad():
@@ -103,6 +106,7 @@ def load_model(
         return str(tokenizer.decode(reply_tokens, skip_special_tokens=True))
 
     return generate
+
 
 def load_generator(model_name: str) -> TextGenerator:
     """Load the model, or exit with a clear message if it cannot load."""

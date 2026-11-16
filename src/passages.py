@@ -2,6 +2,7 @@ from typing import List, Tuple
 from src.generator import  read_span
 from src.models import  MinimalSource
 
+
 def read_passages(
     sources: List[MinimalSource],
 ) -> List[Tuple[MinimalSource, str]]:
