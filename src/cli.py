@@ -8,6 +8,7 @@ from src.models import (
     StudentSearchResults,
     StudentSearchResultsAndAnswer,
 )
+from src.evaluator import evaluate_recall
 from src.error import fail
 from src.generator import answer_question, load_generator
 from src.question import search_question
@@ -164,4 +165,16 @@ class Cli:
         self, student_search_results_path: str, dataset_path: str
     ) -> None:
         """Report recall@k against a ground-truth dataset."""
-        fail("evaluate is not implemented yet")
+        try:
+        student = StudentSearchResults.model_validate_json(
+            Path(student_search_results_path).read_text(encoding="utf-8")
+        )
+        dataset = RagDataset.model_validate_json(
+            Path(dataset_path).read_text(encoding="utf-8")
+        )
+        recalls = evaluate_recall(student, dataset)
+    except (ValueError, OSError) as error:
+        fail(f"cannot evaluate search results: {error}")
+
+    for k, recall in recalls.items():
+        print(f"Recall@{k}: {recall:.2%}")
