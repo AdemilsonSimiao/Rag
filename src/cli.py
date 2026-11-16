@@ -166,15 +166,15 @@ class Cli:
     ) -> None:
         """Report recall@k against a ground-truth dataset."""
         try:
-        student = StudentSearchResults.model_validate_json(
-            Path(student_search_results_path).read_text(encoding="utf-8")
-        )
-        dataset = RagDataset.model_validate_json(
-            Path(dataset_path).read_text(encoding="utf-8")
-        )
-        recalls = evaluate_recall(student, dataset)
-    except (ValueError, OSError) as error:
-        fail(f"cannot evaluate search results: {error}")
+            student = StudentSearchResults.model_validate_json(
+                Path(student_search_results_path).read_text(encoding="utf-8")
+            )
+            dataset = RagDataset.model_validate_json(
+                Path(dataset_path).read_text(encoding="utf-8")
+            )
+            recalls = evaluate_recall(student, dataset)
+        except (ValueError, OSError) as error:
+            fail(f"cannot evaluate search results: {error}")
 
-    for k, recall in recalls.items():
-        print(f"Recall@{k}: {recall:.2%}")
+        for k, recall in recalls.items():
+            print(f"Recall@{k}: {recall:.2%}")

@@ -1,5 +1,5 @@
 from typing import List, Tuple
-from src.generator import  read_span
+from src.generator import read_span
 from src.models import  MinimalSource
 
 

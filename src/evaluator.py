@@ -1,4 +1,3 @@
-# src/evaluator.py
 from typing import Dict, Tuple
 
 from src.models import AnsweredQuestion, RagDataset, StudentSearchResults
@@ -8,14 +7,21 @@ def _overlaps(
     retrieved: Tuple[str, int, int],
     expected: Tuple[str, int, int],
 ) -> bool:
+    """True if same file and the character ranges have IoU >= 0.05."""
     retrieved_path, retrieved_start, retrieved_end = retrieved
     expected_path, expected_start, expected_end = expected
 
-    return (
-        retrieved_path == expected_path
-        and retrieved_start < expected_end
-        and expected_start < retrieved_end
+    overlap = min(retrieved_end, expected_end) - max(
+        retrieved_start, expected_start
     )
+    if retrieved_path != expected_path or overlap <= 0:
+        return False
+    union = (
+        (retrieved_end - retrieved_start)
+        + (expected_end - expected_start)
+        - overlap
+    )
+    return overlap / union >= 0.05
 
 
 def evaluate_recall(
