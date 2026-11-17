@@ -103,3 +103,14 @@ def test_load_corrupted_file_raises_value_error(tmp_path: Path) -> None:
     path.write_bytes(b"not a pickle")
     with pytest.raises(ValueError):
         Bm25Index.load(path)
+
+
+def test_equal_scores_keep_the_chunk_order() -> None:
+    """Chunks with the same score come out in index order, every time."""
+    same = [make_chunk(f"f{i}.md", "adapter", i * 10) for i in range(5)]
+    index = Bm25Index.build(same)
+    paths = [chunk.file_path for chunk, _ in index.search("adapter", 5)]
+    assert paths == ["f0.md", "f1.md", "f2.md", "f3.md", "f4.md"]
+    assert [c.file_path for c, _ in index.search("adapter", 2)] == [
+        "f0.md", "f1.md"
+    ]

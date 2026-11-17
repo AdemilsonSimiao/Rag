@@ -75,9 +75,9 @@ class Bm25Index:
             posting = self.postings.get(term)
             if posting is not None:
                 scores[posting[0]] += posting[1]
-        k = min(k, len(self.chunks))
-        best = np.argpartition(-scores, k - 1)[:k]
-        best = best[np.argsort(-scores[best], kind="stable")]
+        # Best score first; equal scores keep index order, so the result
+        # is the same on every machine.
+        best = np.lexsort((np.arange(len(scores)), -scores))[:k]
         return [
             (self.chunks[i], float(scores[i])) for i in best if scores[i] > 0
         ]
