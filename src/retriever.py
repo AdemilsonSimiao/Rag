@@ -29,42 +29,66 @@ class Bm25Index:
     def __init__(
         self,
         chunks: List[Chunk],
-        postings: Dict[
-            str, Tuple[npt.NDArray[np.int32], npt.NDArray[np.float32]]
-        ],
+        term_ranges: Dict[str, Tuple[int, int]],
+        doc_ids: npt.NDArray[np.int32],
+        weights: npt.NDArray[np.float32],
     ) -> None:
-        """Store the chunks and, per term, the chunks it appears in."""
+        """Store the chunks and the postings of all terms in two big arrays.
+
+        The chunks of term ``t`` are ``doc_ids[a:b]`` and their BM25 scores
+        are ``weights[a:b]``, where ``(a, b) = term_ranges[t]``. Two big
+        arrays load much faster from disk than thousands of small ones.
+        """
         self.chunks: List[Chunk] = chunks
-        self.postings = postings
+        self.term_ranges = term_ranges
+        self.doc_ids = doc_ids
+        self.weights = weights
 
     @classmethod
     def build(
         cls, chunks: List[Chunk], k1: float = 1.5, b: float = 0.75
     ) -> "Bm25Index":
         """Tokenize every chunk (path included) and precompute BM25 scores."""
-        doc_ids: Dict[str, List[int]] = {}
+        term_docs: Dict[str, List[int]] = {}
         freqs: Dict[str, List[int]] = {}
         lengths: List[int] = []
         for doc_id, chunk in enumerate(chunks):
             tokens = tokenize(chunk.file_path + "\n" + chunk.text)
             lengths.append(len(tokens))
             for term, freq in Counter(tokens).items():
-                doc_ids.setdefault(term, []).append(doc_id)
+                term_docs.setdefault(term, []).append(doc_id)
                 freqs.setdefault(term, []).append(freq)
 
         doc_len = np.array(lengths, dtype=np.float32)
         avg_len = float(doc_len.mean()) if lengths else 1.0
-        postings: Dict[
-            str, Tuple[npt.NDArray[np.int32], npt.NDArray[np.float32]]
-        ] = {}
-        for term, ids in doc_ids.items():
+        term_ranges: Dict[str, Tuple[int, int]] = {}
+        id_parts: List[npt.NDArray[np.int32]] = []
+        weight_parts: List[npt.NDArray[np.float32]] = []
+        position = 0
+        for term, ids in term_docs.items():
             tf = np.array(freqs[term], dtype=np.float32)
             df = len(ids)
             idf = math.log(1 + (len(chunks) - df + 0.5) / (df + 0.5))
             norm = k1 * (1 - b + b * doc_len[ids] / avg_len)
-            weights = (idf * tf * (k1 + 1) / (tf + norm)).astype(np.float32)
-            postings[term] = (np.array(ids, dtype=np.int32), weights)
-        return cls(chunks, postings)
+            id_parts.append(np.array(ids, dtype=np.int32))
+            weight_parts.append(
+                (idf * tf * (k1 + 1) / (tf + norm)).astype(np.float32)
+            )
+            term_ranges[term] = (position, position + df)
+            position += df
+        if not id_parts:
+            return cls(
+                chunks,
+                term_ranges,
+                np.zeros(0, dtype=np.int32),
+                np.zeros(0, dtype=np.float32),
+            )
+        return cls(
+            chunks,
+            term_ranges,
+            np.concatenate(id_parts),
+            np.concatenate(weight_parts),
+        )
 
     def search(self, query: str, k: int) -> List[Tuple[Chunk, float]]:
         """Return the top-k chunks for the query, best first, with scores."""
@@ -72,9 +96,10 @@ class Bm25Index:
             return []
         scores = np.zeros(len(self.chunks), dtype=np.float32)
         for term in set(tokenize(query)):
-            posting = self.postings.get(term)
-            if posting is not None:
-                scores[posting[0]] += posting[1]
+            found = self.term_ranges.get(term)
+            if found is not None:
+                start, end = found
+                scores[self.doc_ids[start:end]] += self.weights[start:end]
         # Best score first; equal scores keep index order, so the result
         # is the same on every machine.
         best = np.lexsort((np.arange(len(scores)), -scores))[:k]
@@ -95,7 +120,13 @@ class Bm25Index:
             with open(path, "rb") as file:
                 index = pickle.load(file)
         except (pickle.UnpicklingError, EOFError, AttributeError) as error:
-            raise ValueError(f"index file {path} is corrupted") from error
-        if not isinstance(index, cls):
-            raise ValueError(f"index file {path} is not a BM25 index")
+            raise ValueError(
+                f"index file {path} is corrupted or from an older version; "
+                "run the index command again"
+            ) from error
+        if not isinstance(index, cls) or not hasattr(index, "term_ranges"):
+            raise ValueError(
+                f"index file {path} is not a valid BM25 index; "
+                "run the index command again"
+            )
         return index

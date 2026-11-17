@@ -1,6 +1,6 @@
 from pathlib import Path
 from tqdm import tqdm
-from src.indexer import build_index, load_index
+from src.indexer import build_index
 from src.models import (
     MinimalAnswer,
     MinimalSearchResults,
@@ -10,10 +10,8 @@ from src.models import (
 )
 from src.evaluator import evaluate_recall
 from src.error import fail
-from src.generator import answer_question, load_generator
-from src.question import search_question
+from src.question import Answerer, Searcher
 from typing import List
-from src.passages import read_passages
 
 
 class Cli:
@@ -33,7 +31,11 @@ class Cli:
         print(f"Ingestion complete! Indices saved under {index_dir}/")
 
     def search(
-        self, query: str, k: int = 10, index_dir: str = "data/processed"
+        self,
+        query: str,
+        k: int = 10,
+        index_dir: str = "data/processed",
+        use_cache: bool = True,
     ) -> None:
         """Print the top-k sources for a single query."""
         query = str(query)
@@ -41,11 +43,12 @@ class Cli:
             fail("the query is empty")
         if k <= 0:
             fail("k must be a positive integer")
+        searcher = Searcher(index_dir, use_cache)
         try:
-            index = load_index(index_dir)
+            result = searcher.search("single-query", query, k)
         except (ValueError, OSError) as error:
             fail(str(error))
-        result = search_question(index, "single-query", query, k)
+        searcher.save()
         print(result.model_dump_json(indent=2))
 
     def search_dataset(
@@ -54,23 +57,25 @@ class Cli:
         k: int,
         save_directory: str,
         index_dir: str = "data/processed",
+        use_cache: bool = True,
     ) -> None:
         """Search a whole dataset and write a StudentSearchResults JSON."""
         if k <= 0:
             fail("k must be a positive integer")
+        searcher = Searcher(index_dir, use_cache)
         try:
-            index = load_index(index_dir)
             dataset = RagDataset.model_validate_json(
                 Path(dataset_path).read_text(encoding="utf-8")
             )
+            results: List[MinimalSearchResults] = [
+                searcher.search(q.question_id, q.question, k)
+                for q in tqdm(
+                    dataset.rag_questions, desc="Searching", unit="question"
+                )
+            ]
         except (ValueError, OSError) as error:
             fail(f"cannot read the dataset or the index: {error}")
-        results: List[MinimalSearchResults] = [
-            search_question(index, q.question_id, q.question, k)
-            for q in tqdm(
-                dataset.rag_questions, desc="Searching", unit="question"
-            )
-        ]
+        searcher.save()
         output = Path(save_directory) / Path(dataset_path).name
         try:
             output.parent.mkdir(parents=True, exist_ok=True)
@@ -90,6 +95,8 @@ class Cli:
         k: int = 10,
         index_dir: str = "data/processed",
         model_name: str = "Qwen/Qwen3-0.6B",
+        use_cache: bool = True,
+        cache_dir: str = "data/processed",
     ) -> None:
         """Answer a single query using the retrieved context."""
         query = str(query)
@@ -97,14 +104,14 @@ class Cli:
             fail("the query is empty")
         if k <= 0:
             fail("k must be a positive integer")
+        searcher = Searcher(index_dir, use_cache)
         try:
-            index = load_index(index_dir)
+            found = searcher.search("single-query", query, k)
         except (ValueError, OSError) as error:
             fail(str(error))
-        found = search_question(index, "single-query", query, k)
-        generate = load_generator(model_name)
-        text = answer_question(
-            generate, query, read_passages(found.retrieved_sources)
+        searcher.save()
+        text = Answerer(model_name, cache_dir, use_cache).answer(
+            query, found.retrieved_sources
         )
         print(
             MinimalAnswer(
@@ -120,6 +127,8 @@ class Cli:
         student_search_results_path: str,
         save_directory: str,
         model_name: str = "Qwen/Qwen3-0.6B",
+        use_cache: bool = True,
+        cache_dir: str = "data/processed",
     ) -> None:
         """Generate answers for a dataset of search results."""
         try:
@@ -129,14 +138,10 @@ class Cli:
         except (ValueError, OSError) as error:
             fail(f"cannot read the search results: {error}")
         print(f"Loaded {len(found.search_results)} questions")
-        generate = load_generator(model_name)
+        answerer = Answerer(model_name, cache_dir, use_cache)
         answers: List[MinimalAnswer] = []
         for result in tqdm(found.search_results, desc="Answering"):
-            text = answer_question(
-                generate,
-                result.question,
-                read_passages(result.retrieved_sources),
-            )
+            text = answerer.answer(result.question, result.retrieved_sources)
             answers.append(
                 MinimalAnswer(
                     question_id=result.question_id,
