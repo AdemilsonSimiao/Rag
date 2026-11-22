@@ -1,2 +1,2 @@
 [flake8]
-exclude = .venv,.git,__pycache__,.mypy_cache,data,tests
+exclude = .venv,.git,__pycache__,.mypy_cache,data,tests,src_old

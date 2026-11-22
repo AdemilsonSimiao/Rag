@@ -17,7 +17,7 @@ dependencies = [
 pythonpath = ["."]
 
 [tool.mypy]
-exclude = ["^\\.venv/", "^data/", "^tests/"]
+exclude = ["^\\.venv/", "^data/", "^tests/", "^src_old/"]
 
 [dependency-groups]
 dev = [

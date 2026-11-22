@@ -6,7 +6,7 @@ from src.models import (
     MinimalSearchResults,
     RagDataset,
     StudentSearchResults,
-    StudentSearchResultsAndAnswer,
+    StudentSearchResultsAndAnswer
 )
 from src.evaluator import evaluate_recall
 from src.error import fail
@@ -16,7 +16,6 @@ from typing import List
 
 class Cli:
     """RAG commands exposed through Python Fire."""
-
     def index(
         self,
         max_chunk_size: int = 2000,
@@ -28,7 +27,7 @@ class Cli:
             build_index(raw_dir, index_dir, max_chunk_size)
         except (ValueError, OSError) as error:
             fail(str(error))
-        print(f"Ingestion complete! Indices saved under {index_dir}/")
+        print(f"Ingestion complete! Indeces saved under {index_dir}/")
 
     def search(
         self,
@@ -94,7 +93,7 @@ class Cli:
         query: str,
         k: int = 10,
         index_dir: str = "data/processed",
-        model_name: str = "Qwen/Qwen3-0.6B",
+        model_name: str = "Quen/Quen3-0.6B",
         use_cache: bool = True,
         cache_dir: str = "data/processed",
     ) -> None:
@@ -125,8 +124,8 @@ class Cli:
     def answer_dataset(
         self,
         student_search_results_path: str,
-        save_directory: str,
-        model_name: str = "Qwen/Qwen3-0.6B",
+        save_dir: str,
+        model_name: str = "Quen/Quen3-0.6B",
         use_cache: bool = True,
         cache_dir: str = "data/processed",
     ) -> None:
@@ -150,19 +149,19 @@ class Cli:
                     answer=text,
                 )
             )
-        output = Path(save_directory) / Path(student_search_results_path).name
+        output = Path(save_dir) / Path(student_search_results_path).name
         try:
             output.parent.mkdir(parents=True, exist_ok=True)
             output.write_text(
                 StudentSearchResultsAndAnswer(
                     search_results=answers, k=found.k
                 ).model_dump_json(indent=2),
-                encoding="utf-8",
+                encoding="utf-8"
             )
         except OSError as error:
             fail(f"cannot write {output}: {error}")
         print(
-            f"Processed {len(answers)} of {len(answers)} questions\n"
+            f"Processed {len(answers)} of {len(answers)} question\n"
             f"Saved student_search_results_and_answer to {output}"
         )
 
@@ -180,6 +179,5 @@ class Cli:
             recalls = evaluate_recall(student, dataset)
         except (ValueError, OSError) as error:
             fail(f"cannot evaluate search results: {error}")
-
         for k, recall in recalls.items():
             print(f"Recall@{k}: {recall:.2%}")

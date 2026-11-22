@@ -14,7 +14,6 @@ def chunk_python(
         raise ValueError("max_chunk_size must be positive")
     if overlap < 0 or overlap >= max_chunk_size:
         raise ValueError("overlap must be >= 0 and < max_chunk_size")
-
     chunks: List[Chunk] = []
     step: int = max_chunk_size - overlap
     start: int = 0
@@ -38,7 +37,6 @@ def _section_starts(text: str) -> List[int]:
     """Return the offsets where a section starts (0 and each heading)."""
     heading: "re.Pattern[str]" = re.compile(r"#{1,6}[ \t]")
     fences: Tuple[str, str] = ("```", "~~~")
-
     starts: List[int] = [0]
     in_fence: bool = False
     offset: int = 0
@@ -52,7 +50,7 @@ def _section_starts(text: str) -> List[int]:
 
 
 def _cut_point(text: str, start: int, max_chunk_size: int) -> int:
-    """Pick where a piece starting at ``start`` ends, at most max size."""
+    """Pick where a piece starting at ''start'' ends, at most max size."""
     limit: int = min(start + max_chunk_size, len(text))
     if limit == len(text):
         return limit
@@ -69,7 +67,6 @@ def chunk_markdown(
     """Split Markdown or text into sections, cutting long ones by paragraph."""
     if max_chunk_size <= 0:
         raise ValueError("max_chunk_size must be positive")
-
     bounds: List[int] = _section_starts(text) + [len(text)]
     chunks: List[Chunk] = []
     for section_start, section_end in zip(bounds, bounds[1:]):

@@ -305,9 +305,6 @@ Example output of step 5 (shortened):
 
 ### How AI was used
 
-Claude (Anthropic) was used as a tutor and coding assistant throughout the
-project:
-
 - **Planning:** discussing the pipeline, drawing the flowchart, and analysing the
   public datasets (where expected spans start, their sizes) to choose the
   chunking strategies.

@@ -1,19 +1,18 @@
 import json
 from pathlib import Path
 from typing import Dict, List, Optional
-
 from src.cache import JsonCache, file_digest, index_signature
 from src.generator import TextGenerator, answer_question, load_generator
-from src.indexer import index_file, load_index
 from src.models import MinimalSearchResults, MinimalSource
 from src.passages import read_passages
 from src.retriever import Bm25Index
+from src.indexer import index_file, load_index
 
 
-def search_question(
+def searc_question(
     index: Bm25Index, question_id: str, question: str, k: int
 ) -> MinimalSearchResults:
-    """Search one question and keep only the fields the moulinette expects."""
+    """Search one question and keep only the fields the moulinnete expects."""
     sources: List[MinimalSource] = [
         MinimalSource(
             file_path=chunk.file_path,
@@ -28,14 +27,9 @@ def search_question(
 
 
 class Searcher:
-    """Search questions, using a disk cache and loading the index lazily.
-
-    A question already searched with the same index and the same search
-    code is answered from the cache, without loading the index at all.
-    """
-
+    """Search questions, using a disk cache and loading the index lazily."""
     def __init__(self, index_dir: str, use_cache: bool = True) -> None:
-        """Prepare the searcher; nothing is loaded until it is needed."""
+        """Prepare the searcer; nothing is loaded until it is needed."""
         self.index_dir = index_dir
         self.index: Optional[Bm25Index] = None
         self.cache: Optional[JsonCache] = None
@@ -68,7 +62,7 @@ class Searcher:
                 pass
         if self.index is None:
             self.index = load_index(self.index_dir)
-        result = search_question(self.index, question_id, question, k)
+        result = searc_question(self.index, question_id, question, k)
         if self.cache is not None:
             self.cache.set(
                 key, [s.model_dump() for s in result.retrieved_sources]
@@ -82,17 +76,11 @@ class Searcher:
 
 
 class Answerer:
-    """Answer questions, with a disk cache and a lazily loaded model.
-
-    The model is loaded only when an answer is not in the cache and there
-    is something to answer from. Each new answer is saved at once, so an
-    interrupted run can continue where it stopped.
-    """
-
+    """Answer questions, with a disk cache and a lazily loaded model."""
     def __init__(
         self, model_name: str, cache_dir: str, use_cache: bool = True
     ) -> None:
-        """Prepare the answerer; the model is not loaded yet."""
+        """Prepare the answerer; e the model is not loaded yet."""
         self.model_name = model_name
         self.model: Optional[TextGenerator] = None
         self.cache: Optional[JsonCache] = None
@@ -123,5 +111,5 @@ class Answerer:
         text = answer_question(self.generate, question, passages)
         if self.cache is not None and passages:
             self.cache.set(key, text)
-            self.cache.save()
+            self.cache.save
         return text
