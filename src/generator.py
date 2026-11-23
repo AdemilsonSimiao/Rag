@@ -82,7 +82,7 @@ def load_model(
     from transformers import AutoModelForCausalLM, AutoTokenizer
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model: Any = AutoModelForCausalLM.from_pretrained(model_name)
-    model.eval
+    model.eval()
 
     def generate(messages: List[Dict[str, str]]) -> str:
         """Run the model on the chat messages and return only the reply."""
@@ -109,4 +109,4 @@ def load_generator(model_name: str) -> TextGenerator:
     try:
         return load_model(model_name)
     except (ImportError, OSError, RuntimeError, ValueError) as error:
-        fail(f"cannot load the model {model_name: {error}}")
+        fail(f"cannot load the model {model_name}: {error}")

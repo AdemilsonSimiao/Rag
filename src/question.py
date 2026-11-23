@@ -111,5 +111,5 @@ class Answerer:
         text = answer_question(self.generate, question, passages)
         if self.cache is not None and passages:
             self.cache.set(key, text)
-            self.cache.save
+            self.cache.save()
         return text
