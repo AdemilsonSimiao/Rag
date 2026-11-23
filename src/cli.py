@@ -137,7 +137,7 @@ class Cli:
         except (ValueError, OSError) as error:
             fail(f"cannot read the search results: {error}")
         print(f"Loaded {len(found.search_results)} questions")
-        answerer  = Answerer(model_name, cache_dir, use_cache)
+        answerer = Answerer(model_name, cache_dir, use_cache)
         answers: List[MinimalAnswer] = []
         for result in tqdm(found.search_results, desc="Answering"):
             text = answerer.answer(result.question, result.retrieved_sources)

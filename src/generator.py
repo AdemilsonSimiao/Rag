@@ -75,7 +75,7 @@ def answer_question(
 
 
 def load_model(
-    model_name: str = "Quen/Quen3-0.6B", max_new_tokens: int = 256
+    model_name: str = "Qwen/Qwen3-0.6B", max_new_tokens: int = 256
 ) -> TextGenerator:
     """Load the model once and return a greedy text generation function."""
     import torch

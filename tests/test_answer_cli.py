@@ -109,7 +109,11 @@ def test_model_that_cannot_load_exits_cleanly(
 
     monkeypatch.setattr("src.generator.load_model", broken)
     results = project / "results.json"
-    write_results(results, [])
+    write_results(results, [{
+        "file_path": "data/raw/lora.md",
+        "first_character_index": 0,
+        "last_character_index": 40,
+    }])
     with pytest.raises(SystemExit) as error:
         Cli().answer_dataset(str(results), str(project / "out"))
     assert error.value.code == 1
