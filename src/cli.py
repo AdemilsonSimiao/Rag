@@ -124,7 +124,7 @@ class Cli:
     def answer_dataset(
         self,
         student_search_results_path: str,
-        save_dir: str,
+        save_directory: str,
         model_name: str = "Qwen/Qwen3-0.6B",
         use_cache: bool = True,
         cache_dir: str = "data/processed",
@@ -149,7 +149,7 @@ class Cli:
                     answer=text,
                 )
             )
-        output = Path(save_dir) / Path(student_search_results_path).name
+        output = Path(save_directory) / Path(student_search_results_path).name
         try:
             output.parent.mkdir(parents=True, exist_ok=True)
             output.write_text(
