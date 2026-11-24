@@ -41,9 +41,9 @@ def build_context(
 def build_messages(question: str, context: str) -> List[Dict[str, str]]:
     """Bild chat prompt: rules for the model, context and question."""
     system = (
-        "You answer questions about the vLLM codebase and documentation."
+        "You answer questions about the vLLM codebase and documentation. "
         "Use ONLY the context provided. If the context does not contain "
-        "the answer, say that you cannot find it in the provided sources."
+        "the answer, say that you cannot find it in the provided sources. "
         "Be concise and precise, and copy identifiers, file names and "
         "values exctly as they appear in the context."
     )

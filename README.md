@@ -170,7 +170,7 @@ NumPy, without a retrieval library.
 **Ranking.** At indexing time, the BM25 score of every (term, chunk) pair is
 computed once and stored as an inverted index of NumPy arrays. A query only sums
 the stored scores of its terms, and the top-k chunks are selected with
-`argpartition`. The result is a list of chunks with their scores, best first.
+`lexsort`. The result is a list of chunks with their scores, best first.
 
 ## Performance analysis
 
@@ -225,7 +225,7 @@ Observations and limits:
   status 1, without a traceback. Every path is a command-line argument.
 - **Typed, tested code.** Type hints everywhere, Pydantic models for every
   exchanged structure, and unit tests for the chunkers, retriever, indexer,
-  generator, evaluator and CLI (the model is replaced by a fake one in tests).
+  generator and CLI (the model is replaced by a fake one in tests).
 
 ## Challenges faced
 
